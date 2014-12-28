@@ -1,0 +1,5 @@
+kernel=uboot.img
+gpu_mem=128
+device_tree=devtree.dat
+device_tree_address=0x100
+disable_commandline_tags=1
