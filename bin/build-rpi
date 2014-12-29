@@ -77,10 +77,19 @@ case $1 in
 		echo "*** Done."
 		exit 0
 		;;
-	'boot')
-		# mkdir -p ${X_RPIBOOTDIR} || exit 1
-		# Populate the boot dir with the ubldr/rpi.dts from the rootdir
-		# Populate the boot dir with uboot
+	'install-boot')
+		# Populate the boot workdir with the files we're going to
+		# put in the MSDOS image
+		# (Pre-built uboot, etc)
+		mkdir -p ${X_WORKDIR}/boot/ || exit 1
+		cp -v ${X_LCLDIR}/files/rpi/boot/* ${X_WORKDIR}/boot/
+
+		# Populate the boot dir with the ubldr from the rootdir
+		# XXX TODO: DTS, once it's built/installed as part of the buildkernel/installkernel :(
+		cp -v ${X_ROOTDIR}/boot/ubldr ${X_WORKDIR}/boot/
+
+		echo "*** Done."
+		exit 0
 	;;
 	'boot-image')
 		# Build MSDOS image
@@ -88,10 +97,15 @@ case $1 in
 		newfs_msdos ${X_WORKDIR}/boot.img
 
 		# Populate MSDOS image
-		for i in `ls ${X_LCLDIR}/files/rpi/boot`; do
-			mcopy -i ${X_WORKDIR}/boot.img "${X_LCLDIR}/files/rpi/boot/${i}" "::${i}"
+		for i in `ls ${X_WORKDIR}/boot`; do
+			mcopy -i ${X_WORKDIR}/boot.img "${X_WORKDIR}/boot/${i}" "::${i}"
 		done
-		echo "** Done."
+		echo "*** Done."
+		exit 0
+	;;
+	'clean-boot')
+		rm -rf ${X_WORKDIR}/boot/ || exit 1
+		echo "*** Done."
 		exit 0
 	;;
 	'root-image')
