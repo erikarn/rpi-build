@@ -2,6 +2,7 @@ This is adrian's experiment for building freebsd-head images for the raspberry p
 
 Specific bits here:
 
+* It requires perl for bin/filter.pl. No, not sorry!
 * It's all hard-coded paths in bin/build-rpi;
 * I'm trying out the non-root build/install method
 * .. which involves using METALOG from install, makefs and mkimg

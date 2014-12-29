@@ -3,8 +3,6 @@
 X_SRCDIR=/home/adrian/work/freebsd/head-arm/src
 X_OBJDIR=/home/adrian/work/freebsd/head-arm/obj
 X_ROOTDIR=/home/adrian/work/freebsd/head-arm/root
-X_RPIBOOTDIR=/home/adrian/work/freebsd/head-arm/rpiboot
-
 X_WORKDIR=/home/adrian/work/freebsd/head-arm
 
 X_LCLDIR="`dirname $0`/../"
@@ -73,6 +71,7 @@ case $1 in
 		# Ok, now we have to populate a new METALOG based on
 		# what's in the result from 'installworld/installkernel'
 		# and the above file.
+		${X_LCLDIR}/bin/filter.pl ${X_ROOTDIR}/METALOG ${METALOG_FILE} ${X_ROOTDIR}/METALOG.NEW
 
 		echo "*** Done."
 		exit 0
@@ -111,7 +110,7 @@ case $1 in
 	'root-image')
 		# For now, 800M image, so we fit in 1G!
 		# .. we'll grow later at boot time.
-		makefs -t ffs -o version=2 -F ${X_ROOTDIR}/METALOG -B le -m 838860800 -M 838860800 -f 800000 -x ${X_WORKDIR}/rootfs.img ${X_ROOTDIR}
+		makefs -t ffs -o version=2 -F ${X_ROOTDIR}/METALOG.NEW -B le -m 838860800 -M 838860800 -f 800000 -x ${X_WORKDIR}/rootfs.img ${X_ROOTDIR}
 		echo "*** Done."
 		exit 0
 	;;
@@ -124,12 +123,16 @@ case $1 in
 		echo "*** Done."
 		exit 0
 	;;
-	'clean-dirs')
+	'clean-obj')
 		rm -rf ../obj
-		rm -rf ../root
 		rm ${X_WORKDIR}/make.conf
 		rm ${X_WORKDIR}/src.conf
-		echo "** Done."
+		echo "*** Done."
+		exit 0
+	;;
+	'clean-root')
+		rm -rf ../root
+		echo "*** Done."
 		exit 0
 	;;
 	'clean-img')
@@ -139,7 +142,7 @@ case $1 in
 		exit 0
 	;;
 	*)
-		echo "Usage: $0 build|install|clean"
+		echo "Usage: $0 build|install|other-stuff-read-the-script"
 		exit 127
 		;;
 esac
