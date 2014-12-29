@@ -138,6 +138,7 @@ case $1 in
 	'clean-img')
 		rm ${X_WORKDIR}/boot.img
 		rm ${X_WORKDIR}/rootfs.img
+		rm ${X_WORKDIR}/r-pi.img
 		echo "** Done."
 		exit 0
 	;;
