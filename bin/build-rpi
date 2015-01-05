@@ -110,7 +110,7 @@ case $1 in
 	'root-image')
 		# For now, 800M image, so we fit in 1G!
 		# .. we'll grow later at boot time.
-		makefs -t ffs -o version=2 -F ${X_ROOTDIR}/METALOG.NEW -B le -m 838860800 -M 838860800 -f 800000 -x ${X_WORKDIR}/rootfs.img ${X_ROOTDIR}
+		(cd ${X_ROOTDIR} && makefs -D -t ffs -o version=2 -B le -m 838860800 -M 838860800 -f 800000 ${X_WORKDIR}/rootfs.img ${X_ROOTDIR}/METALOG.NEW)
 		echo "*** Done."
 		exit 0
 	;;
