@@ -1,0 +1,141 @@
+#!/bin/sh
+
+build_world()
+{
+	touch ${X_WORKDIR}/make.conf
+	touch ${X_WORKDIR}/src.conf
+	env \
+	    MAKEOBJDIRPREFIX=${X_OBJDIR} \
+	    make -j4 -s buildworld buildkernel \
+	    __MAKE_CONF=${X_WORKDIR}/make.conf \
+	    SRCCONF=${X_WORKDIR}/src.conf KERNCONF=RPI-B \
+	    UBLDR_LOADADDR=0x01000000 \
+	    TARGET_ARCH=armv6 || exit 1
+	echo "** Done."
+}
+
+build_fdt()
+{
+	env \
+	    MAKEOBJDIRPREFIX=${X_OBJDIR} \
+	    make -s builddtb FDT_DTS_FILE=rpi.dts \
+	    __MAKE_CONF=${X_WORKDIR}/make.conf \
+	    SRCCONF=${X_WORKDIR}/src.conf KERNCONF=RPI-B \
+	    UBLDR_LOADADDR=0x01000000 \
+	    TARGET_ARCH=armv6 || exit 1
+	echo "** Done."
+}
+
+install_world()
+{
+	mkdir -p ${X_ROOTDIR} || exit 1
+	env \
+	    MAKEOBJDIRPREFIX=${X_OBJDIR} \
+	    make -s installworld installkernel distribution \
+	    __MAKE_CONF=${X_WORKDIR}/make.conf \
+	    SRCCONF=${X_WORKDIR}/src.conf \
+	    KERNCONF=RPI-B \
+	    NO_ROOT=yes TARGET_ARCH=armv6 \
+	    DESTDIR=${X_ROOTDIR} || exit 1
+	echo "** Done."
+}
+
+install_custom()
+{
+	local METALOG_FILE
+
+	METALOG_FILE=${X_ROOTDIR}/METALOG.ADD
+	rm -f ${METALOG_FILE}
+
+	# FreeBSD-HEAD install: knows about -U and metalog..
+	install -d -U -M ${METALOG_FILE} -D ${X_ROOTDIR} -o root -g wheel -S -m 0755 ${X_ROOTDIR}/boot/msdos
+	install -U -M ${METALOG_FILE} -D ${X_ROOTDIR} -o root -g wheel -S -m 0644 ${X_LCLDIR}/files/rpi/root/etc/ttys ${X_ROOTDIR}/etc
+	install -U -M ${METALOG_FILE} -D ${X_ROOTDIR} -o root -g wheel -S -m 0644 ${X_LCLDIR}/files/rpi/root/etc/fstab ${X_ROOTDIR}/etc
+	install -U -M ${METALOG_FILE} -D ${X_ROOTDIR} -o root -g wheel -S -m 0644 ${X_LCLDIR}/files/rpi/root/etc/rc.conf ${X_ROOTDIR}/etc
+	install -U -M ${METALOG_FILE} -D ${X_ROOTDIR} -o root -g wheel -S -m 0644 ${X_LCLDIR}/files/rpi/root/boot/loader.rc ${X_ROOTDIR}/boot
+
+	# Ok, now we have to populate a new METALOG based on
+	# what's in the result from 'installworld/installkernel'
+	# and the above file.
+	${X_LCLDIR}/bin/filter.pl ${X_ROOTDIR}/METALOG ${METALOG_FILE} ${X_ROOTDIR}/METALOG.NEW
+
+	echo "*** Done."
+}
+
+install_boot()
+{
+	# Populate the boot workdir with the files we're going to
+	# put in the MSDOS image
+	# (Pre-built uboot, etc)
+	mkdir -p ${X_WORKDIR}/boot/ || exit 1
+	cp -v ${X_LCLDIR}/files/rpi/boot/* ${X_WORKDIR}/boot/
+
+	# Populate the boot dir with the ubldr from the rootdir
+	# XXX TODO: DTS, once it's built/installed as part of the buildkernel/installkernel :(
+	cp -vf ${X_ROOTDIR}/boot/ubldr ${X_WORKDIR}/boot/
+
+	echo "*** Done."
+}
+
+boot_image()
+{
+	local i
+
+	# Build MSDOS image
+	dd if=/dev/zero of=${X_WORKDIR}/boot.img bs=1m count=32
+	newfs_msdos ${X_WORKDIR}/boot.img
+
+	# Populate MSDOS image
+	for i in `ls ${X_WORKDIR}/boot`; do
+		mcopy -i ${X_WORKDIR}/boot.img "${X_WORKDIR}/boot/${i}" "::${i}"
+	done
+	echo "*** Done."
+}
+
+clean_boot()
+{
+	rm -rf ${X_WORKDIR}/boot/ || exit 1
+	echo "*** Done."
+}
+
+root_image()
+{
+	# For now, 800M image, so we fit in 1G!
+	# .. we'll grow later at boot time.
+	(cd ${X_ROOTDIR} && makefs -D -t ffs -o version=2 -B le -m 838860800 -M 838860800 -f 800000 ${X_WORKDIR}/rootfs.img ${X_ROOTDIR}/METALOG.NEW)
+	echo "*** Done."
+}
+
+full_image()
+{
+	# Ok, join together, using the cascading mkimg thingy from the manpage
+	MKIMG_PARAMS="-H 255 -P 512 -T 63 -v"
+	# mkimg ${MKIMG_PARAMS} -s mbr -p "fat32:=${X_WORKDIR}/boot.img" -p "freebsd:=${X_WORKDIR}/rootfs.img" -o "${X_WORKDIR}/r-pi.img"
+	MKIMG_INNER="mkimg -s bsd -p \"freebsd-ufs:=${X_WORKDIR}/rootfs.img\""
+	mkimg ${MKIMG_PARAMS} -s mbr -p "fat32:=${X_WORKDIR}/boot.img" -p "freebsd:-${MKIMG_INNER}" -o "${X_WORKDIR}/r-pi.img"
+	echo "*** Done."
+	exit 0
+}
+
+clean_obj()
+{
+	rm -rf ${X_OBJDIR}
+	rm ${X_WORKDIR}/make.conf
+	rm ${X_WORKDIR}/src.conf
+	echo "*** Done."
+}
+
+clean_root()
+{
+	rm -rf ${X_ROOTDIR}
+	echo "*** Done."
+}
+
+clean_img()
+{
+	rm ${X_WORKDIR}/boot.img
+	rm ${X_WORKDIR}/rootfs.img
+	rm ${X_WORKDIR}/r-pi.img
+	echo "** Done."
+}
+
