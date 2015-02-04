@@ -52,6 +52,8 @@ install_custom()
 	install -U -M ${METALOG_FILE} -D ${X_ROOTDIR} -o root -g wheel -S -m 0644 ${X_LCLDIR}/files/rpi/root/etc/ttys ${X_ROOTDIR}/etc
 	install -U -M ${METALOG_FILE} -D ${X_ROOTDIR} -o root -g wheel -S -m 0644 ${X_LCLDIR}/files/rpi/root/etc/fstab ${X_ROOTDIR}/etc
 	install -U -M ${METALOG_FILE} -D ${X_ROOTDIR} -o root -g wheel -S -m 0644 ${X_LCLDIR}/files/rpi/root/etc/rc.conf ${X_ROOTDIR}/etc
+	install -U -M ${METALOG_FILE} -D ${X_ROOTDIR} -o root -g wheel -S -m 0755 -d ${X_ROOTDIR}/usr/local/etc/pkg/repos/
+	install -U -M ${METALOG_FILE} -D ${X_ROOTDIR} -o root -g wheel -S -m 0644 ${X_LCLDIR}/files/rpi/root/etc/myrepo.conf ${X_ROOTDIR}/usr/local/etc/pkg/repos/
 	install -U -M ${METALOG_FILE} -D ${X_ROOTDIR} -o root -g wheel -S -m 0644 ${X_LCLDIR}/files/rpi/root/boot/loader.rc ${X_ROOTDIR}/boot
 
 	# Ok, now we have to populate a new METALOG based on

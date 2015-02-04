@@ -1,0 +1,53 @@
+#!/bin/sh
+
+X_SRCDIR=/home/adrian/work/freebsd/head-arm/src
+X_OBJDIR=/home/adrian/work/freebsd/head-arm/obj
+X_ROOTDIR=/home/adrian/work/freebsd/head-arm/root
+X_WORKDIR=/home/adrian/work/freebsd/head-arm
+
+X_LCLDIR="`dirname $0`/../"
+
+. ${X_LCLDIR}/lib/build-rpi
+
+# TODO:
+# * .. why don't I see console booting?
+# * need to copy in the compiled fdt into rpigoo before
+#   the boot environment is made.
+# The console is still the UART
+
+case $1 in
+	'build')
+		build_world
+		build_fdt
+		exit 0
+	;;
+	'install')
+		install_world
+		install_custom
+		install_boot
+		exit 0
+	;;
+	'image')
+		boot_image
+		root_image
+		full_image
+		exit 0
+	;;
+	'cleanimg')
+		clean_img
+		exit 0
+	;;
+	'cleanobj')
+		clean_boot
+		clean_obj
+		exit 0
+	;;
+	'cleanroot')
+		clean_root
+		exit 0
+	;;
+	*)
+		echo "Usage: $0 build|install|image|cleanimg|cleanobj|cleanroot"
+		exit 127
+	;;
+esac
