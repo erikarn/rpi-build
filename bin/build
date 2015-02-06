@@ -25,6 +25,7 @@ case $1 in
 		install_world
 		install_custom
 		install_boot
+		install_src
 		exit 0
 	;;
 	'image')

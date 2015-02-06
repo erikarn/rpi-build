@@ -2,6 +2,7 @@
 
 build_world()
 {
+	echo "*** build_world .."
 	touch ${X_WORKDIR}/make.conf
 	touch ${X_WORKDIR}/src.conf
 	env \
@@ -16,6 +17,7 @@ build_world()
 
 build_fdt()
 {
+	echo "*** build_fdt .."
 	env \
 	    MAKEOBJDIRPREFIX=${X_OBJDIR} \
 	    make -s builddtb FDT_DTS_FILE=rpi.dts \
@@ -28,6 +30,7 @@ build_fdt()
 
 install_world()
 {
+	echo "*** install_world .."
 	mkdir -p ${X_ROOTDIR} || exit 1
 	env \
 	    MAKEOBJDIRPREFIX=${X_OBJDIR} \
@@ -40,9 +43,22 @@ install_world()
 	echo "** Done."
 }
 
+install_src()
+{
+
+	echo "*** install_src .."
+	# It'd be nice if we could populate a src tarball with
+	# metalog data. Alas..
+	mkdir -p ${X_ROOTDIR}/usr/src/
+	cp -r ${X_SRCDIR}/ ${X_ROOTDIR}/usr/src/
+	echo "*** install_src: done!"
+}
+
 install_custom()
 {
 	local METALOG_FILE
+
+	echo "*** install_custom .."
 
 	METALOG_FILE=${X_ROOTDIR}/METALOG.ADD
 	rm -f ${METALOG_FILE}
@@ -66,11 +82,13 @@ install_custom()
 
 install_boot()
 {
+	echo "*** install_boot .."
+
 	# Populate the boot workdir with the files we're going to
 	# put in the MSDOS image
 	# (Pre-built uboot, etc)
 	mkdir -p ${X_WORKDIR}/boot/ || exit 1
-	cp -v ${X_LCLDIR}/files/rpi/boot/* ${X_WORKDIR}/boot/
+	cp -fv ${X_LCLDIR}/files/rpi/boot/* ${X_WORKDIR}/boot/
 
 	# Populate the boot dir with the ubldr from the rootdir
 	# XXX TODO: DTS, once it's built/installed as part of the buildkernel/installkernel :(
@@ -83,6 +101,7 @@ boot_image()
 {
 	local i
 
+	echo "*** boot_image .."
 	# Build MSDOS image
 	dd if=/dev/zero of=${X_WORKDIR}/boot.img bs=1m count=32
 	newfs_msdos ${X_WORKDIR}/boot.img
@@ -96,12 +115,14 @@ boot_image()
 
 clean_boot()
 {
+	echo "*** clean_boot .."
 	rm -rf ${X_WORKDIR}/boot/ || exit 1
 	echo "*** Done."
 }
 
 root_image()
 {
+	echo "*** root_image .."
 	# For now, 800M image, so we fit in 1G!
 	# .. we'll grow later at boot time.
 	(cd ${X_ROOTDIR} && makefs -D -t ffs -o version=2 -B le -m 838860800 -M 838860800 -f 800000 ${X_WORKDIR}/rootfs.img ${X_ROOTDIR}/METALOG.NEW)
@@ -110,6 +131,7 @@ root_image()
 
 full_image()
 {
+	echo "*** full_image .."
 	# Ok, join together, using the cascading mkimg thingy from the manpage
 	MKIMG_PARAMS="-H 255 -P 512 -T 63 -v"
 	# mkimg ${MKIMG_PARAMS} -s mbr -p "fat32:=${X_WORKDIR}/boot.img" -p "freebsd:=${X_WORKDIR}/rootfs.img" -o "${X_WORKDIR}/r-pi.img"
@@ -121,6 +143,7 @@ full_image()
 
 clean_obj()
 {
+	echo "*** clean_obj .."
 	rm -rf ${X_OBJDIR}
 	rm ${X_WORKDIR}/make.conf
 	rm ${X_WORKDIR}/src.conf
@@ -129,12 +152,14 @@ clean_obj()
 
 clean_root()
 {
+	echo "*** clean_root .."
 	rm -rf ${X_ROOTDIR}
 	echo "*** Done."
 }
 
 clean_img()
 {
+	echo "*** clean_img .."
 	rm ${X_WORKDIR}/boot.img
 	rm ${X_WORKDIR}/rootfs.img
 	rm ${X_WORKDIR}/r-pi.img
