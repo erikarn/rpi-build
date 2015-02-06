@@ -1,3 +1,0 @@
-mmc rescan
-fatload mmc 0:1 ${loadaddr} ubldr
-bootelf ${loadaddr}

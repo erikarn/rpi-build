@@ -1,7 +1,0 @@
-disable_commandline_tags=1
-gpu_mem=64
-hdmi_group=2
-hdmi_mode=9
-device_tree=rpi.dtb
-device_tree_address=0x100
-kernel=uboot.img
