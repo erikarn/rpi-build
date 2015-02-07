@@ -38,6 +38,10 @@ case $1 in
 		clean_img
 		exit 0
 	;;
+	'cleanboot')
+		clean_boot
+		exit 0
+	;;
 	'cleanobj')
 		clean_boot
 		clean_obj
